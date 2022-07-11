@@ -7,11 +7,16 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { EffectComposer,RenderPass } from "postprocessing";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { PLANETS } from "../constants";
 
 const loader = new GLTFLoader();
 
 export default {
-mounted(){
+    data() {
+        return {
+        }
+    },
+    mounted(){
         // Create scene
         const scene = this.createScene();
         const camera = this.createCamera();
@@ -23,11 +28,22 @@ mounted(){
 
         const composer = this.setupPostProcessing(scene, camera, renderer);
 
-        this.createSolarSystem(scene);
+        const planets = this.createSolarSystem(scene);
 
+        let event = new CustomEvent('tick', { detail: { delta: 0 } } );
+        const clock = new THREE.Clock();
+
+        THREE.Object3D.prototype.tick = (e) => {}
+        
         // Animation loop
         function animate(){
             requestAnimationFrame(animate);
+
+            // Update planets
+            for(let planet of planets){
+                planet.tick(clock.getDelta());
+            }
+
             controls.update();
             composer.render();
         }
@@ -42,24 +58,58 @@ mounted(){
         }
     },
     methods: {
+        // Look through list of all planets and initialize them
         createSolarSystem: function(scene) {
-            loader.load(`../../blender_assets/earth.glb`, function (gltf) {
+            const planets = []; // List of Object3D of planets
+            for(let planet of PLANETS) {
+                // Load 3D model
+                loader.load(`../../blender_assets/gltf/${planet.name}.glb`, function (gltf) {
+                    gltf.scene.name = planet.name;
+                    gltf.scene.userData = {
+                        orbitalVelocity: planet.orbitalVelocity,
+                        orbitObject: planet.orbitObject,
+                        orbitalRadius: planet.orbitalRadius,
+                    }
 
-                scene.add(gltf.scene);
-            }, undefined, function (error) {
-                console.error(error);
-            } );
+                    // Get the object the planet is orbitting
+                    if(planet.orbitObject != null) {
+                        let orbitObject = scene.children.find(c => c.name === planet.orbitObject);
+                        // Distance planet from orbitObject by orbitalRadius
+                        gltf.scene.position.z = orbitObject.position.z + planet.orbitalRadius;
+                    }
+
+                    // Update event
+                    gltf.scene.tick = function(e) {
+                        this.position.z += e * this.userData.orbitalVelocity * 1000;
+                    };
+
+                    planets.push(gltf.scene);
+                    scene.add(gltf.scene);
+                }, undefined, function (error) {
+                    console.error(error);
+                } );
+            }
+            
+            return planets;
         },
         createScene: function() {
             const scene = new THREE.Scene();
-            const bgTexture = new THREE.TextureLoader().load('../../blender_assets/universe.png');
-            scene.background = bgTexture;
+            const loader = new THREE.CubeTextureLoader();
+            const texture = loader.load([
+                '../../blender_assets/universe.jpg',
+                '../../blender_assets/universe.jpg',
+                '../../blender_assets/universe.jpg',
+                '../../blender_assets/universe.jpg',
+                '../../blender_assets/universe.jpg',
+                '../../blender_assets/universe.jpg',
+            ]);            
+            scene.background = texture;
 
             return scene;
         },
         // Create and cofigure camera and return it 
         createCamera: function () { 
-            const camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 250);
+            const camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 500);
 
             return camera;
         },
@@ -71,17 +121,16 @@ mounted(){
                 canvas: this.$refs.canvas,
                 alpha: true
             });
-
             renderer.setClearColor( 0x000000, 0 );
 
             this.resizeRenderer(renderer);
 
-            renderer.render(scene, camera);
-            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.autoClearColor = false;
+            renderer.outputEncoding = THREE.LinearEncoding;
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.render(scene, camera);
 
-            console.log(window.innerHeight);
             return renderer;
         },
         // Create and configure controls and return it 
@@ -91,13 +140,14 @@ mounted(){
             controls.enableDamping = true;
             controls.dampingFactor = 0.1;
             controls.enablePan = false;
-            controls.minDistance = 5;
-            controls.maxDistance = 100;
+            controls.minDistance = 120;
+            controls.maxDistance = 500;
 
             return controls;
         },
         setupLighting: function (scene) {
-            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            scene.add(ambientLight);
         },
         // Configure postprocessing and return composer
         setupPostProcessing: function (scene, camera, renderer) {
