@@ -11,6 +11,10 @@ export const PLANETS = [
 		orbitalVelocity: 0,
         orbitObject: null,
         orbitalRadius: 0,
+        betterOrbitalRadius: 0,
+        betterScale: 0.15,
+        rotationVelocity: 2,
+        orbitalInclination: 0,
     },
     {
         name: "earth",
@@ -21,8 +25,12 @@ export const PLANETS = [
         distanceFromSun: 1,
         radius: 6371,
 		TimesLarger: -1,
-		orbitalVelocity: 29.8,
+		orbitalVelocity: 29.8, //15662880
         orbitObject: "sun",
-        orbitalRadius: 120//149.6, //149600000 // Scale: 1m : 1 000 000km
+        orbitalRadius: 149600000, 
+        betterOrbitalRadius: 40, //149.6, //149600000 // Scale: 1m : 1 000 000km
+        betterScale: 1,
+        rotationVelocity: 0.46,
+        orbitalInclination: 3,
     }
 ]

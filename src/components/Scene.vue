@@ -30,24 +30,19 @@ export default {
 
         const planets = this.createSolarSystem(scene);
 
-        let event = new CustomEvent('tick', { detail: { delta: 0 } } );
         const clock = new THREE.Clock();
 
         THREE.Object3D.prototype.tick = (e) => {}
         
-        // Animation loop
-        function animate(){
-            requestAnimationFrame(animate);
-
+        renderer.setAnimationLoop(() => {
             // Update planets
+            let delta = clock.getDelta();
             for(let planet of planets){
-                planet.tick(clock.getDelta());
+                planet.tick(delta);
             }
-
             controls.update();
             composer.render();
-        }
-        animate();
+        })
 
         // Resize renderer when window size changes 
         window.onresize = () => {
@@ -64,32 +59,72 @@ export default {
             for(let planet of PLANETS) {
                 // Load 3D model
                 loader.load(`../../blender_assets/gltf/${planet.name}.glb`, function (gltf) {
-                    gltf.scene.name = planet.name;
-                    gltf.scene.userData = {
+                    gltf.scene.scale.set(planet.betterScale, planet.betterScale, planet.betterScale);
+                    let updateObject;
+                    let userData = {
                         orbitalVelocity: planet.orbitalVelocity,
-                        orbitObject: planet.orbitObject,
                         orbitalRadius: planet.orbitalRadius,
+                        currentDistance: 30000,
+                        currentRotation: 0,
+                        planetCircumference: 2 * Math.PI * planet.radius,
+                        orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
+                        betterOrbitalRadius: planet.betterOrbitalRadius,
+                        isPivot: false,
+                        radius: planet.radius,
+                        rotationVelocity: planet.rotationVelocity,
                     }
-
                     // Get the object the planet is orbitting
                     if(planet.orbitObject != null) {
                         let orbitObject = scene.children.find(c => c.name === planet.orbitObject);
-                        // Distance planet from orbitObject by orbitalRadius
-                        gltf.scene.position.z = orbitObject.position.z + planet.orbitalRadius;
+                        // Distance planet from orbitObject by betterOrbitalRadius
+                        gltf.scene.position.z = orbitObject.position.z + planet.betterOrbitalRadius;
+                        gltf.scene.userData.orbitObject = orbitObject;
+
+                        let pivot = new THREE.Object3D();
+                        pivot.name = planet.name;
+                        pivot.userData = userData;
+                        pivot.userData.isPivot = true;
+                        orbitObject.add(pivot);
+                        pivot.add(gltf.scene);
+                        updateObject = pivot;
+                        pivot.rotation.x = THREE.MathUtils.degToRad(planet.orbitalInclination);
+ 
+                        scene.add(pivot);
+                        planets.push(pivot);
+                    }
+                    else{
+                        gltf.scene.userData = userData;
+                        gltf.scene.name = planet.name;
+
+                        updateObject = gltf.scene;
+
+                        scene.add(gltf.scene);
+                        planets.push(gltf.scene);
                     }
 
                     // Update event
-                    gltf.scene.tick = function(e) {
-                        this.position.z += e * this.userData.orbitalVelocity * 1000;
-                    };
+                    updateObject.tick = function(e) {
+                        if(this.userData.orbitalRadius !== 0){
+                            this.userData.currentDistance += (this.userData.orbitalVelocity * e);
+                            if(this.userData.currentDistance > this.userData.orbitalCircumference){
+                                this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
+                            }
 
-                    planets.push(gltf.scene);
-                    scene.add(gltf.scene);
+                            this.rotation.y = this.userData.currentDistance / this.userData.orbitalCircumference * Math.PI * 2;
+                        }
+                        this.userData.currentRotation += (this.userData.rotationVelocity * e);
+                        let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
+                        if(this.userData.isPivot){
+                            this.children[0].rotation.y = rY;
+                        }
+                        else{
+                            this.rotation.y = rY;
+                        }
+                    };
                 }, undefined, function (error) {
                     console.error(error);
                 } );
             }
-            
             return planets;
         },
         createScene: function() {
@@ -140,14 +175,32 @@ export default {
             controls.enableDamping = true;
             controls.dampingFactor = 0.1;
             controls.enablePan = false;
-            controls.minDistance = 120;
+            controls.minDistance = 60;
             controls.maxDistance = 500;
+            controls.object.rotation.x = -0.841;
+            controls.object.rotation.y = 0.528;
+            controls.object.rotation.z = 0.513;
+            controls.object.position.x = 98.467;
+            controls.object.position.y = 125.67;
+            controls.object.position.z = 112.32;
 
             return controls;
         },
         setupLighting: function (scene) {
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-            scene.add(ambientLight);
+            //const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            //scene.add(ambientLight);
+
+            // Test light -> replace with light from sun
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            const directionLight = new THREE.DirectionalLight(0xE9B37C);
+            directionLight.position.set(-50, 50, -20);
+            directionLight.shadow.camera.near = 1;
+            directionLight.shadow.camera.far = 500;
+            directionLight.shadow.camera.right =  1500;
+            directionLight.shadow.camera.left = -1500;
+            directionLight.shadow.camera.top =  1500;
+            directionLight.shadow.camera.bottom = -1500;
+            scene.add(directionalLight);
         },
         // Configure postprocessing and return composer
         setupPostProcessing: function (scene, camera, renderer) {
