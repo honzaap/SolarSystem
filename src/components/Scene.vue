@@ -16,7 +16,7 @@ export default {
         return {
         }
     },
-    mounted(){
+    async mounted(){
         // Create scene
         const scene = this.createScene();
         const camera = this.createCamera();
@@ -28,7 +28,7 @@ export default {
 
         const composer = this.setupPostProcessing(scene, camera, renderer);
 
-        const planets = this.createSolarSystem(scene);
+        const planets = await this.createSolarSystem(scene);
 
         const clock = new THREE.Clock();
 
@@ -54,78 +54,85 @@ export default {
     },
     methods: {
         // Look through list of all planets and initialize them
-        createSolarSystem: function(scene) {
+        createSolarSystem: async function(scene) {
             const planets = []; // List of Object3D of planets
             for(let planet of PLANETS) {
                 // Load 3D model
-                loader.load(`../../blender_assets/gltf/${planet.name}.glb`, function (gltf) {
-                    gltf.scene.scale.set(planet.betterScale, planet.betterScale, planet.betterScale);
-                    let updateObject;
-                    let userData = {
-                        orbitalVelocity: planet.orbitalVelocity,
-                        orbitalRadius: planet.orbitalRadius,
-                        currentDistance: 30000,
-                        currentRotation: 0,
-                        planetCircumference: 2 * Math.PI * planet.radius,
-                        orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
-                        betterOrbitalRadius: planet.betterOrbitalRadius,
-                        isPivot: false,
-                        radius: planet.radius,
-                        rotationVelocity: planet.rotationVelocity,
-                    }
-                    // Get the object the planet is orbitting
-                    if(planet.orbitObject != null) {
-                        let orbitObject = scene.children.find(c => c.name === planet.orbitObject);
-                        // Distance planet from orbitObject by betterOrbitalRadius
-                        gltf.scene.position.z = orbitObject.position.z + planet.betterOrbitalRadius;
-                        gltf.scene.userData.orbitObject = orbitObject;
+                let gltf = await loader.loadAsync(`../../blender_assets/gltf/${planet.name}.glb`);
+                let updateObject;
+                let userData = {
+                    orbitalVelocity: planet.orbitalVelocity,
+                    orbitalRadius: planet.orbitalRadius,
+                    currentDistance: 30000,
+                    currentRotation: 0,
+                    planetCircumference: 2 * Math.PI * planet.radius,
+                    orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
+                    betterOrbitalRadius: planet.betterOrbitalRadius,
+                    isPivot: false,
+                    radius: planet.radius,
+                    rotationVelocity: planet.rotationVelocity,
+                }
+                // Get the object the planet is orbitting
+                if(planet.orbitObject != null) {
+                    let orbitObject = this.findOrbitObject(planets, planet.orbitObject);
+                    gltf.scene.position.z = planet.betterOrbitalRadius;
 
-                        let pivot = new THREE.Object3D();
-                        pivot.name = planet.name;
-                        pivot.userData = userData;
-                        pivot.userData.isPivot = true;
-                        orbitObject.add(pivot);
-                        pivot.add(gltf.scene);
-                        updateObject = pivot;
-                        pivot.rotation.x = THREE.MathUtils.degToRad(planet.orbitalInclination);
- 
-                        scene.add(pivot);
-                        planets.push(pivot);
-                    }
-                    else{
-                        gltf.scene.userData = userData;
-                        gltf.scene.name = planet.name;
+                    // Create a pivot for orbit
+                    let pivot = new THREE.Object3D();
+                    pivot.name = planet.name;
+                    pivot.userData = userData;
+                    pivot.userData.isPivot = true;
+                    pivot.add(gltf.scene);
+                    pivot.rotation.x = THREE.MathUtils.degToRad(planet.orbitalInclination);
 
-                        updateObject = gltf.scene;
+                    updateObject = pivot;
 
-                        scene.add(gltf.scene);
-                        planets.push(gltf.scene);
-                    }
+                    orbitObject.add(pivot);
+                    planets.push(pivot);
+                }
+                else{
+                    gltf.scene.userData = userData;
+                    gltf.scene.name = planet.name;
 
-                    // Update event
-                    updateObject.tick = function(e) {
-                        if(this.userData.orbitalRadius !== 0){
-                            this.userData.currentDistance += (this.userData.orbitalVelocity * e);
-                            if(this.userData.currentDistance > this.userData.orbitalCircumference){
-                                this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
-                            }
+                    updateObject = gltf.scene;
 
-                            this.rotation.y = this.userData.currentDistance / this.userData.orbitalCircumference * Math.PI * 2;
-                        }
-                        this.userData.currentRotation += (this.userData.rotationVelocity * e);
-                        let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
-                        if(this.userData.isPivot){
-                            this.children[0].rotation.y = rY;
-                        }
-                        else{
-                            this.rotation.y = rY;
-                        }
-                    };
-                }, undefined, function (error) {
-                    console.error(error);
-                } );
+                    scene.add(gltf.scene);
+                    planets.push(gltf.scene);
+                }
+
+                // Update event
+                this.createUpdateLoop(updateObject);
             }
             return planets;
+        },
+        // Finds the correct object to orbit in the list of planets
+        findOrbitObject: function(planets, name) {
+            let planet = planets.find(p => p.name === name);
+            if(planet.userData.isPivot) {
+                return planet.children.find(p => !p.userData.isPivot);
+            }
+            return planet;
+        },
+        // Adds tick method to planet that runs every frame 
+        createUpdateLoop: function(planet) {
+            planet.tick = function(e) {
+                if(this.userData.orbitalRadius !== 0){
+                    this.userData.currentDistance += (this.userData.orbitalVelocity * e);
+                    if(this.userData.currentDistance > this.userData.orbitalCircumference){
+                        this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
+                    }
+
+                    this.rotation.y = this.userData.currentDistance / this.userData.orbitalCircumference * Math.PI * 2;
+                }
+                this.userData.currentRotation += (this.userData.rotationVelocity * e);
+                let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
+                if(this.userData.isPivot){
+                    this.children[0].rotation.y = rY;
+                }
+                else{
+                    this.rotation.y = rY;
+                }
+            };  
         },
         createScene: function() {
             const scene = new THREE.Scene();

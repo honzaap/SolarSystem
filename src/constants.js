@@ -25,12 +25,29 @@ export const PLANETS = [
         distanceFromSun: 1,
         radius: 6371,
 		TimesLarger: -1,
-		orbitalVelocity: 29.8, //15662880
+		orbitalVelocity: 2980000, //29.8
         orbitObject: "sun",
         orbitalRadius: 149600000, 
         betterOrbitalRadius: 40, //149.6, //149600000 // Scale: 1m : 1 000 000km
         betterScale: 1,
         rotationVelocity: 0.46,
         orbitalInclination: 3,
+    },
+    {
+        name: "moon",
+		displayName: "Earth's Moon",
+        description: "The brightest object in the night sky",
+		year: "27 days",
+        distanceFromSun: 1,
+        radius: 1737.5,
+		TimesLarger: 0.27,
+        distance: "385000 km",
+		orbitalVelocity: 100000.022, //1.022
+        orbitObject: "earth",
+        orbitalRadius: 385000, 
+        betterOrbitalRadius: 3,
+        betterScale: 1,
+        rotationVelocity: 0.966,
+        orbitalInclination: 5,
     }
 ]
