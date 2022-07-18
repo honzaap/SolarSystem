@@ -1,4 +1,5 @@
 export const PLANETS = [
+    /* - - Sun - - */
     {
         name: "sun",
 		displayName: "The Sun",
@@ -11,11 +12,45 @@ export const PLANETS = [
 		orbitalVelocity: 0,
         orbitObject: null,
         orbitalRadius: 0,
-        betterOrbitalRadius: 0,
-        betterScale: 0.15,
+        scaledOrbitalRadius: 0,
         rotationVelocity: 2,
         orbitalInclination: 0,
     },
+    /* - - Sun - - */
+
+    /* - - Planets - - */
+    /*{
+        name: "mercury",
+		displayName: "Mercury",
+        description: "Swift Planet",
+		year: "88 days",
+        day: "59 days",
+        distanceFromSun: 0.4,
+        radius: 2439.7,
+		TimesLarger: 0.38,
+		orbitalVelocity: 47.9, 
+        orbitObject: "sun",
+        orbitalRadius: 57909050, 
+        scaledOrbitalRadius: 30, 
+        rotationVelocity: 0.003,
+        orbitalInclination: 3.3,
+    },
+    {
+        name: "venus",
+		displayName: "Venus",
+        description: "Morning Star",
+		year: "225 days",
+        day: "243 days",
+        distanceFromSun: 0.7,
+        radius: 6051.8,
+		TimesLarger: 0.9,
+		orbitalVelocity: 35.0, 
+        orbitObject: "sun",
+        orbitalRadius: 108200000, 
+        scaledOrbitalRadius: 35, 
+        rotationVelocity: 0.003,
+        orbitalInclination: 3.8,
+    },*/
     {
         name: "earth",
 		displayName: "Earth",
@@ -25,29 +60,62 @@ export const PLANETS = [
         distanceFromSun: 1,
         radius: 6371,
 		TimesLarger: -1,
-		orbitalVelocity: 2980000, //29.8
+		orbitalVelocity: 29.8, //29.8
         orbitObject: "sun",
         orbitalRadius: 149600000, 
-        betterOrbitalRadius: 40, //149.6, //149600000 // Scale: 1m : 1 000 000km
-        betterScale: 1,
+        scaledOrbitalRadius: 40, //149.6, //149600000 // Scale: 1m : 1 000 000km
         rotationVelocity: 0.46,
         orbitalInclination: 3,
     },
+    /*{
+        name: "mars",
+		displayName: "Mars",
+        description: "Red Planet",
+		year: "1.88 years",
+        day: "24.6 hours",
+        distanceFromSun: 1.5,
+        radius: 3389.5,
+		TimesLarger: 0.52,
+		orbitalVelocity: 24.1, 
+        orbitObject: "sun",
+        orbitalRadius: 227939366, 
+        scaledOrbitalRadius: 45, 
+        rotationVelocity: 0.241,
+        orbitalInclination: 5.6,
+    },
+    {
+        name: "jupiter",
+		displayName: "Jupiter",
+        description: "Giant Planet",
+		year: "11.86 years",
+        day: "9.93 hours",
+        distanceFromSun: 5.1,
+        radius: 69911,
+		TimesLarger: 11,
+		orbitalVelocity: 24.1, 
+        orbitObject: "sun",
+        orbitalRadius: 778412027, 
+        scaledOrbitalRadius: 55, 
+        rotationVelocity: 12.6,
+        orbitalInclination: 6,
+    },*/
+    /* - - Sun - - */
+
+    /* - - Moons - - */
     {
         name: "moon",
 		displayName: "Earth's Moon",
         description: "The brightest object in the night sky",
 		year: "27 days",
-        distanceFromSun: 1,
         radius: 1737.5,
 		TimesLarger: 0.27,
         distance: "385000 km",
-		orbitalVelocity: 100000.022, //1.022
+		orbitalVelocity: 1.022,
         orbitObject: "earth",
         orbitalRadius: 385000, 
-        betterOrbitalRadius: 3,
-        betterScale: 1,
+        scaledOrbitalRadius: 3,
         rotationVelocity: 0.966,
         orbitalInclination: 5,
     }
+    /* - - Sun - - */
 ]

@@ -67,7 +67,7 @@ export default {
                     currentRotation: 0,
                     planetCircumference: 2 * Math.PI * planet.radius,
                     orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
-                    betterOrbitalRadius: planet.betterOrbitalRadius,
+                    scaledOrbitalRadius: planet.scaledOrbitalRadius,
                     isPivot: false,
                     radius: planet.radius,
                     rotationVelocity: planet.rotationVelocity,
@@ -75,7 +75,7 @@ export default {
                 // Get the object the planet is orbitting
                 if(planet.orbitObject != null) {
                     let orbitObject = this.findOrbitObject(planets, planet.orbitObject);
-                    gltf.scene.position.z = planet.betterOrbitalRadius;
+                    gltf.scene.position.z = planet.scaledOrbitalRadius;
 
                     // Create a pivot for orbit
                     let pivot = new THREE.Object3D();
