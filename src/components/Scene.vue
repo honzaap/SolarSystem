@@ -103,6 +103,7 @@ export default {
                 // Update event
                 this.createUpdateLoop(updateObject);
             }
+
             return planets;
         },
         // Finds the correct object to orbit in the list of planets
@@ -116,21 +117,25 @@ export default {
         // Adds tick method to planet that runs every frame 
         createUpdateLoop: function(planet) {
             planet.tick = function(e) {
+                // Planet orbit around its parent
                 if(this.userData.orbitalRadius !== 0){
-                    this.userData.currentDistance += (this.userData.orbitalVelocity * e);
+                    this.userData.currentDistance += (this.userData.orbitalVelocity * e) * 60 * 60 * 24;// * 28;
                     if(this.userData.currentDistance > this.userData.orbitalCircumference){
                         this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
                     }
 
                     this.rotation.y = this.userData.currentDistance / this.userData.orbitalCircumference * Math.PI * 2;
                 }
-                this.userData.currentRotation += (this.userData.rotationVelocity * e);
+
+                // Planet rotation around its own axis 
+                this.userData.currentRotation += (this.userData.rotationVelocity * e)  * 60 * 60 * 24;// * 28;
                 let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
+                // Find the Group that holds the Meshes and roatate it
                 if(this.userData.isPivot){
-                    this.children[0].rotation.y = rY;
+                    this.children[0].children[0].rotation.y = rY;
                 }
                 else{
-                    this.rotation.y = rY;
+                    this.children[0].rotation.y = rY;
                 }
             };  
         },
