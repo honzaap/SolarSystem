@@ -91,7 +91,7 @@ export default {
                     const material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
                     material.side = THREE.DoubleSide;
                     material.transparent = true;
-                    material.opacity = 0.1;
+                    material.opacity = 0.15;
                     let object = new THREE.Mesh(new THREE.TorusGeometry(planet.scaledOrbitalRadius, 0.05, 8, 64 ), material);
                     object.rotation.x = THREE.MathUtils.degToRad(90);
                     pivot.add(object);
@@ -129,7 +129,7 @@ export default {
                 // Planet orbit around its parent
                 if(this.userData.orbitalRadius !== 0){
                     // (this.userData.orbitalVelocity * e * this.userData.orbitalCircumference / 500) // For idealized
-                    this.userData.currentDistance += (this.userData.orbitalVelocity * e); // * 60 * 60 * 24 * 28; 
+                    this.userData.currentDistance += (this.userData.orbitalVelocity * e) * 60 * 60 * 24;// * 28; 
                     if(this.userData.currentDistance > this.userData.orbitalCircumference){
                         this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
                     }
@@ -138,7 +138,7 @@ export default {
                 }
 
                 // Planet rotation around its own axis 
-                this.userData.currentRotation += (this.userData.rotationVelocity * e);//  * 60 * 60 * 24 * 28;
+                this.userData.currentRotation += (this.userData.rotationVelocity * e) * 60 * 60 * 24;// * 28;
                 let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
                 // Find the Group that holds the Meshes and roatate it
                 if(this.userData.isPivot){
