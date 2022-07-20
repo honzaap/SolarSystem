@@ -63,7 +63,7 @@ export default {
                 let userData = {
                     orbitalVelocity: planet.orbitalVelocity,
                     orbitalRadius: planet.orbitalRadius,
-                    currentDistance: 30000,
+                    currentDistance: 2 * Math.PI * planet.orbitalRadius * Math.random(),
                     currentRotation: 0,
                     planetCircumference: 2 * Math.PI * planet.radius,
                     orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
@@ -86,6 +86,15 @@ export default {
                     pivot.rotation.x = THREE.MathUtils.degToRad(planet.orbitalInclination);
 
                     updateObject = pivot;
+
+                    // Create trajectory for planet's orbit
+                    const material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+                    material.side = THREE.DoubleSide;
+                    material.transparent = true;
+                    material.opacity = 0.1;
+                    let object = new THREE.Mesh(new THREE.TorusGeometry(planet.scaledOrbitalRadius, 0.05, 8, 64 ), material);
+                    object.rotation.x = THREE.MathUtils.degToRad(90);
+                    pivot.add(object);
 
                     orbitObject.add(pivot);
                     planets.push(pivot);
@@ -119,7 +128,8 @@ export default {
             planet.tick = function(e) {
                 // Planet orbit around its parent
                 if(this.userData.orbitalRadius !== 0){
-                    this.userData.currentDistance += (this.userData.orbitalVelocity * e) * 60 * 60 * 24;// * 28;
+                    // (this.userData.orbitalVelocity * e * this.userData.orbitalCircumference / 500) // For idealized
+                    this.userData.currentDistance += (this.userData.orbitalVelocity * e); // * 60 * 60 * 24 * 28; 
                     if(this.userData.currentDistance > this.userData.orbitalCircumference){
                         this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
                     }
@@ -128,7 +138,7 @@ export default {
                 }
 
                 // Planet rotation around its own axis 
-                this.userData.currentRotation += (this.userData.rotationVelocity * e)  * 60 * 60 * 24;// * 28;
+                this.userData.currentRotation += (this.userData.rotationVelocity * e);//  * 60 * 60 * 24 * 28;
                 let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
                 // Find the Group that holds the Meshes and roatate it
                 if(this.userData.isPivot){
@@ -156,7 +166,7 @@ export default {
         },
         // Create and cofigure camera and return it 
         createCamera: function () { 
-            const camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 500);
+            const camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 1000);
 
             return camera;
         },
