@@ -58,7 +58,7 @@ export default {
             const planets = []; // List of Object3D of planets
             for(let planet of PLANETS) {
                 // Load 3D model
-                let gltf = await loader.loadAsync(`../../blender_assets/gltf/${planet.name}.glb`);
+                let gltf = await loader.loadAsync(`./assets/gltf/${planet.name}.glb`);
                 let updateObject;
                 let userData = {
                     orbitalVelocity: planet.orbitalVelocity,
@@ -153,12 +153,12 @@ export default {
             const scene = new THREE.Scene();
             const loader = new THREE.CubeTextureLoader();
             const texture = loader.load([
-                '../../blender_assets/universe.jpg',
-                '../../blender_assets/universe.jpg',
-                '../../blender_assets/universe.jpg',
-                '../../blender_assets/universe.jpg',
-                '../../blender_assets/universe.jpg',
-                '../../blender_assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
             ]);            
             scene.background = texture;
 
