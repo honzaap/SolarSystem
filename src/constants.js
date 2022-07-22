@@ -15,6 +15,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 0,
         rotationVelocity: 2,
         orbitalInclination: 0,
+        axialTilt: 7.25,
     },
     /* - - Sun - - */
 
@@ -34,6 +35,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 24, 
         rotationVelocity: 0.003,
         orbitalInclination: 7,
+        axialTilt: 0.03,
     },
     {
         name: "venus",
@@ -50,6 +52,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 31, 
         rotationVelocity: 0.003,
         orbitalInclination: 3.4,
+        axialTilt: 2.64	,
     },
     {
         name: "earth",
@@ -66,6 +69,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 37, //149.6, //149600000 // Scale: 1m : 1 000 000km
         rotationVelocity: 0.46,
         orbitalInclination: 0,
+        axialTilt: 23.44,
     },
     {
         name: "mars",
@@ -82,6 +86,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 45, 
         rotationVelocity: 0.241,
         orbitalInclination: 1.8,
+        axialTilt: 25.19,
     },
     {
         name: "jupiter",
@@ -98,6 +103,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 72, 
         rotationVelocity: 12.6,
         orbitalInclination: 1.3,
+        axialTilt: 3.13,
     },
     {
         name: "saturn",
@@ -114,6 +120,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 108, 
         rotationVelocity: 9.87,
         orbitalInclination: 2.5,
+        axialTilt: 26.73,
     },
     {
         name: "uranus",
@@ -130,6 +137,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 145, 
         rotationVelocity: 2.59,
         orbitalInclination: 0.8,
+        axialTilt: 82.23,
     },
     {
         name: "neptune",
@@ -146,6 +154,7 @@ export const PLANETS = [
         scaledOrbitalRadius: 180, 
         rotationVelocity: 2.6,
         orbitalInclination: 1.8,
+        axialTilt: 28.32,
     },
     /* - - Sun - - */
 

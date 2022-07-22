@@ -5,9 +5,10 @@
 <script>
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { EffectComposer,RenderPass } from "postprocessing";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLANETS } from "../constants";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 
 const loader = new GLTFLoader();
 
@@ -21,6 +22,8 @@ export default {
         const scene = this.createScene();
         const camera = this.createCamera();
         const renderer = this.createRenderer(scene, camera);
+
+        camera.layers.enable(1);
 
         this.setupLighting(scene);
 
@@ -41,6 +44,7 @@ export default {
                 planet.tick(delta);
             }
             controls.update();
+
             composer.render();
         })
 
@@ -76,6 +80,7 @@ export default {
                 if(planet.orbitObject != null) {
                     let orbitObject = this.findOrbitObject(planets, planet.orbitObject);
                     gltf.scene.position.z = planet.scaledOrbitalRadius;
+                    gltf.scene.rotation.z = THREE.MathUtils.degToRad(planet.axialTilt ?? 0);
 
                     // Create a pivot for orbit
                     let pivot = new THREE.Object3D();
@@ -100,13 +105,17 @@ export default {
                     planets.push(pivot);
                 }
                 else{
-                    gltf.scene.userData = userData;
-                    gltf.scene.name = planet.name;
+                    // This is basically only for Sun
+                    let group = new THREE.Group();
+                    gltf.scene.rotation.z = THREE.MathUtils.degToRad(planet.axialTilt ?? 0);
+                    group.add(gltf.scene);
+                    group.userData = userData;
+                    group.name = planet.name;
 
-                    updateObject = gltf.scene;
+                    updateObject = group;
 
-                    scene.add(gltf.scene);
-                    planets.push(gltf.scene);
+                    scene.add(group);
+                    planets.push(group);
                 }
 
                 // Update event
@@ -209,26 +218,92 @@ export default {
             return controls;
         },
         setupLighting: function (scene) {
-            //const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-            //scene.add(ambientLight);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
+            scene.add(ambientLight);
 
-            // Test light -> replace with light from sun
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            const directionLight = new THREE.DirectionalLight(0xE9B37C);
-            directionLight.position.set(-50, 50, -20);
-            directionLight.shadow.camera.near = 1;
-            directionLight.shadow.camera.far = 500;
-            directionLight.shadow.camera.right =  1500;
-            directionLight.shadow.camera.left = -1500;
-            directionLight.shadow.camera.top =  1500;
-            directionLight.shadow.camera.bottom = -1500;
-            scene.add(directionalLight);
+            // Light from the Sun
+            const pointLight = new THREE.PointLight(0xffe8e0, 1.35, 300);
+            scene.add(pointLight);
+
+            const dirLight1 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight1.position.z = 12;
+            dirLight1.position.y = 12;
+            dirLight1.lookAt( 0, 0, 0 );
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight2.position.z = -12;
+            dirLight2.position.y = 12;
+            dirLight2.lookAt( 0, 0, 0 );
+            scene.add(dirLight2);
+
+            const dirLight3 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight3.position.x = 12;
+            dirLight3.position.y = 12;
+            dirLight3.lookAt( 0, 0, 0 );
+            scene.add(dirLight3);
+
+            const dirLight4 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight4.position.x = -12;
+            dirLight4.position.y = 12;
+            dirLight4.lookAt( 0, 0, 0 );
+            scene.add(dirLight4);
+
+            const dirLight5 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight5.position.z = 12;
+            dirLight5.position.y = -12;
+            dirLight5.lookAt( 0, 0, 0 );
+            scene.add(dirLight5);
+
+            const dirLight6 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight6.position.z = -12;
+            dirLight6.position.y = -12;
+            dirLight6.lookAt( 0, 0, 0 );
+            scene.add(dirLight6);
+
+            const dirLight7 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight7.position.x = 12;
+            dirLight7.position.y = -12;
+            dirLight7.lookAt( 0, 0, 0 );
+            scene.add(dirLight7);
+
+            const dirLight8 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight8.position.x = -12;
+            dirLight8.position.y = -12;
+            dirLight8.lookAt( 0, 0, 0 );
+            scene.add(dirLight8);
+
+            const dirLight9 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight9.position.z = 12;
+            dirLight9.position.y = 0;
+            dirLight9.lookAt( 0, 0, 0 );
+            scene.add(dirLight9);
+
+            const dirLight10 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight10.position.z = -12;
+            dirLight10.position.y = 0;
+            dirLight10.lookAt( 0, 0, 0 );
+            scene.add(dirLight10);
+
+            const dirLight11 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            dirLight11.position.x = 12;
+            dirLight11.position.y = 0;
+            dirLight11.lookAt( 0, 0, 0 );
+            scene.add(dirLight11);
+
+            const dirLight12 = new THREE.RectAreaLight(0xffffff, 6, 18, 18);
+            dirLight12.position.x = -12;
+            dirLight12.position.y = 0;
+            dirLight12.lookAt( 0, 0, 0 );
+            scene.add(dirLight12);
         },
         // Configure postprocessing and return composer
         setupPostProcessing: function (scene, camera, renderer) {
             const composer = new EffectComposer(renderer);
             composer.addPass(new RenderPass(scene, camera));
 
+            composer.setSize(window.innerWidth, window.innerHeight);
+                
             return composer;
         },
         // Set's the renderers size to current window size
