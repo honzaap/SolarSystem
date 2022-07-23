@@ -7,9 +7,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLANETS } from "../constants";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
-import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass";
 import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare.js";
 
 const loader = new GLTFLoader();
@@ -22,14 +19,13 @@ export default {
     async mounted(){
         // Create scene
         const scene = this.createScene();
+        const bacakgroundScene = this.createBackgroundScene();
         const camera = this.createCamera();
         const renderer = this.createRenderer(scene, camera);
 
         this.setupLighting(scene);
 
         const controls = this.createControls(camera, renderer);
-
-        const composer = this.setupPostProcessing(scene, camera, renderer);
 
         const planets = await this.createSolarSystem(scene);
 
@@ -45,6 +41,9 @@ export default {
             planet: null,
             outline: null,
         };
+        
+        renderer.autoClear = false;
+        camera.layers.enable(1);
 
         renderer.setAnimationLoop(() => {
             // Update planets
@@ -53,26 +52,32 @@ export default {
                 planet.tick(delta);
             }
             controls.update();
-
+            
             // Planet hover effect
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(planets, true);
             if (intersects.length > 0 && hoverObject.planet == null) {
                 hoverObject.planet = intersects[0].object;
-                hoverObject.outline = this.highlightPlanet(scene, camera, composer, intersects[0].object);
+                hoverObject.outline = this.highlightPlanet(intersects[0].object);
             }
             else if(intersects.length > 0 && hoverObject.planet !== intersects[0].object) {
-                this.unhighlightPlanet(composer, hoverObject);
+                this.unhighlightPlanet(hoverObject.planet);
                 hoverObject.planet = intersects[0].object;
-                hoverObject.outline = this.highlightPlanet(scene, camera, composer, intersects[0].object);
+                hoverObject.outline = this.highlightPlanet(intersects[0].object);
             }
             else if(intersects.length === 0 && hoverObject.planet != null) {
-                this.unhighlightPlanet(composer, hoverObject);
+                this.unhighlightPlanet(hoverObject.planet);
                 hoverObject.planet = null;
                 hoverObject.outline = null;
             }
 
-            composer.render();
+            renderer.clear();
+            camera.layers.set(1);
+            renderer.render(bacakgroundScene, camera);
+            renderer.render(scene, camera);
+
+            camera.layers.set(0);
+            renderer.render(scene, camera);
         })
 
         // Resize renderer when window size changes 
@@ -136,6 +141,7 @@ export default {
                     pivot.add(trajectory);
 
                     gltf.scene.children[0].userData.trajectory = trajectory;
+                    gltf.scene.children[0].userData.canHover = true;
 
                     orbitObject.add(pivot);
                     planets.push(pivot);
@@ -146,11 +152,12 @@ export default {
                     gltf.scene.rotation.z = THREE.MathUtils.degToRad(planet.axialTilt ?? 0);
                     group.add(gltf.scene);
                     group.userData = userData;
+                    gltf.scene.userData.canHover = true;
                     group.name = planet.name;
 
                     updateObject = group;
 
-                    gltf.scene.children[0].material.side = 1;
+                    gltf.scene.children[0].material.side = 2;
 
                     scene.add(group);
                     planets.push(group);
@@ -163,26 +170,31 @@ export default {
             return planets;
         },
         // Creates outline around planet and makes trajectory brighter
-        highlightPlanet: function (scene, camera, composer, mesh) {
-            const outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera, [mesh.parent]);
-            outlinePass.edgeStrength = 3;
-            outlinePass.edgeGlow = 0;
-            outlinePass.edgeThickness = 1;
-            outlinePass.visibleEdgeColor.set(0xffffff);
-            outlinePass.hiddenEdgeColor.set(0x000000);
-            composer.addPass(outlinePass);
+        highlightPlanet: function (mesh) {
+            if(!mesh.parent.userData.canHover) return;
+            mesh.parent.traverse(function (child) {
+                if (child instanceof THREE.Mesh) {
+                    child.material.emissive = new THREE.Color(0x404040);
+                    child.material.emissiveIntensity = 1.31;
+                }
+            });
 
             const trajectory = mesh.parent.userData.trajectory;
             if(trajectory) {
                 trajectory.material.opacity = 1;
             }
 
-            return outlinePass;
+            return null; //outlinePass;
         },
         // Removes outline from planet and makes trajectory transparent
-        unhighlightPlanet: function (composer, hoverObject) {
-            composer.removePass(composer.passes.find(x => x === hoverObject.outline));
-            const trajectory = hoverObject.planet.parent.userData.trajectory;
+        unhighlightPlanet: function (mesh) {
+            if(!mesh?.parent.userData.canHover) return;
+            mesh.parent.traverse(function (child) {
+                if (child instanceof THREE.Mesh) {
+                    child.material.emissive = new THREE.Color(0x000000);
+                }
+            });
+            const trajectory = mesh.parent.userData.trajectory;
             if(trajectory) {
                 trajectory.material.opacity = 0.15;
             }
@@ -223,16 +235,6 @@ export default {
         },
         createScene: function() {
             const scene = new THREE.Scene();
-            const loader = new THREE.CubeTextureLoader();
-            const texture = loader.load([
-                './assets/universe.jpg',
-                './assets/universe.jpg',
-                './assets/universe.jpg',
-                './assets/universe.jpg',
-                './assets/universe.jpg',
-                './assets/universe.jpg',
-            ]);            
-            scene.background = texture;
 
             return scene;
         },
@@ -242,12 +244,29 @@ export default {
 
             return camera;
         },
+        // Create a separate scene with background 
+        createBackgroundScene: function() {
+            const backgroundScene = new THREE.Scene();
+            const loader = new THREE.CubeTextureLoader();
+            const texture = loader.load([
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+                './assets/universe.jpg',
+            ]);            
+            backgroundScene.background = texture;
+
+            return backgroundScene;
+        },
         // Create and configure renderer and return it 
         createRenderer: function (scene, camera) { 
             const renderer = new THREE.WebGLRenderer({
                 powerPreference: "high-performance",
                 canvas: this.$refs.canvas,
-                alpha: true
+                antialias: true,
+                alpha: true,
             });
             renderer.setClearColor( 0x000000, 0 );
 
@@ -293,95 +312,85 @@ export default {
             const textureFlare1 = textureLoader.load( "./assets/textures/lensflare1.png" );
 
             const lensflare = new Lensflare();
-
-            lensflare.addElement(new LensflareElement(textureFlare0, 200, 0, pointLight.color));
-            lensflare.addElement( new LensflareElement(textureFlare1, 60, 0.6));
-            lensflare.addElement( new LensflareElement(textureFlare1, 70, 0.7));
-            lensflare.addElement( new LensflareElement(textureFlare1, 120, 0.9));
-            lensflare.addElement( new LensflareElement(textureFlare1, 70, 1));
+            lensflare.layers.enable(1);
+            lensflare.addElement( new LensflareElement(textureFlare0, 120));
+            lensflare.addElement( new LensflareElement(textureFlare1, 100));
+            lensflare.addElement( new LensflareElement(textureFlare1, 130));
+            lensflare.addElement( new LensflareElement(textureFlare1, 140));
             pointLight.add(lensflare);
 
             // Lights used to bright up the sun
-            const dirLight1 = new THREE.RectAreaLight(0xffffff, 3, 18, 18);
+            const dirLight1 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight1.position.z = 12;
             dirLight1.position.y = 12;
             dirLight1.lookAt( 0, 0, 0 );
             scene.add(dirLight1);
 
-            const dirLight2 = new THREE.RectAreaLight(0xffffff, 4, 18, 18);
+            const dirLight2 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight2.position.z = -12;
             dirLight2.position.y = 12;
             dirLight2.lookAt( 0, 0, 0 );
             scene.add(dirLight2);
 
-            const dirLight3 = new THREE.RectAreaLight(0xffffff, 4, 18, 18);
+            const dirLight3 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight3.position.x = 12;
             dirLight3.position.y = 12;
             dirLight3.lookAt( 0, 0, 0 );
             scene.add(dirLight3);
 
-            const dirLight4 = new THREE.RectAreaLight(0xffffff, 3, 18, 18);
+            const dirLight4 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight4.position.x = -12;
             dirLight4.position.y = 12;
             dirLight4.lookAt( 0, 0, 0 );
             scene.add(dirLight4);
 
-            const dirLight5 = new THREE.RectAreaLight(0xffffff, 3, 18, 18);
+            const dirLight5 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight5.position.z = 12;
             dirLight5.position.y = -12;
             dirLight5.lookAt( 0, 0, 0 );
             scene.add(dirLight5);
 
-            const dirLight6 = new THREE.RectAreaLight(0xffffff, 4, 18, 18);
+            const dirLight6 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight6.position.z = -12;
             dirLight6.position.y = -12;
             dirLight6.lookAt( 0, 0, 0 );
             scene.add(dirLight6);
 
-            const dirLight7 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            const dirLight7 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight7.position.x = 12;
             dirLight7.position.y = -12;
             dirLight7.lookAt( 0, 0, 0 );
             scene.add(dirLight7);
 
-            const dirLight8 = new THREE.RectAreaLight(0xffffff, 3, 18, 18);
+            const dirLight8 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight8.position.x = -12;
             dirLight8.position.y = -12;
             dirLight8.lookAt( 0, 0, 0 );
             scene.add(dirLight8);
 
-            const dirLight9 = new THREE.RectAreaLight(0xffffff, 5, 18, 18);
+            const dirLight9 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight9.position.z = 12;
             dirLight9.position.y = 0;
             dirLight9.lookAt( 0, 0, 0 );
             scene.add(dirLight9);
 
-            const dirLight10 = new THREE.RectAreaLight(0xffffff, 4, 18, 18);
+            const dirLight10 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight10.position.z = -12;
             dirLight10.position.y = 0;
             dirLight10.lookAt( 0, 0, 0 );
             scene.add(dirLight10);
 
-            const dirLight11 = new THREE.RectAreaLight(0xffffff, 4, 18, 18);
+            const dirLight11 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
             dirLight11.position.x = 12;
             dirLight11.position.y = 0;
             dirLight11.lookAt( 0, 0, 0 );
             scene.add(dirLight11);
 
-            const dirLight12 = new THREE.RectAreaLight(0xffffff, 3, 18, 18);
+            const dirLight12 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
             dirLight12.position.x = -12;
             dirLight12.position.y = 0;
             dirLight12.lookAt( 0, 0, 0 );
             scene.add(dirLight12);
-        },
-        // Configure postprocessing and return composer
-        setupPostProcessing: function (scene, camera, renderer) {
-            const composer = new EffectComposer(renderer);
-            composer.addPass(new RenderPass(scene, camera));
-
-            composer.setSize(window.innerWidth, window.innerHeight);
-
-            return composer;
         },
         // Set's the renderers size to current window size
         resizeRenderer: function (renderer) { 
