@@ -41,7 +41,10 @@ export default {
 
         THREE.Object3D.prototype.tick = (e) => {}
 
-        let hoverObject = null;
+        let hoverObject = {
+            planet: null,
+            outline: null,
+        };
 
         renderer.setAnimationLoop(() => {
             // Update planets
@@ -54,33 +57,19 @@ export default {
             // Planet hover effect
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(planets, true);
-            if (intersects.length > 0 && intersects[0].object !== hoverObject) {
-                hoverObject = intersects[0].object;
-                const outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera, [hoverObject.parent]);
-                outlinePass.edgeStrength = 3;
-                outlinePass.edgeGlow = 0;
-                outlinePass.edgeThickness = 1;
-                outlinePass.visibleEdgeColor.set(0xffffff);
-                outlinePass.hiddenEdgeColor.set(0x000000);
-                composer.addPass(outlinePass);
-
-                const trajectory = hoverObject.parent.userData.trajectory;
-                if(trajectory) {
-                    trajectory.material.opacity = 1;
-                }
-
+            if (intersects.length > 0 && hoverObject.planet == null) {
+                hoverObject.planet = intersects[0].object;
+                hoverObject.outline = this.highlightPlanet(scene, camera, composer, intersects[0].object);
             }
-            if(intersects.length === 0 || intersects[0].object !== hoverObject) {
-                for(let pass of composer.passes.filter(x => x instanceof OutlinePass)) {
-                    composer.removePass(pass);
-                }
-                if(hoverObject) {
-                    const trajectory = hoverObject.parent.userData.trajectory;
-                    if(trajectory) {
-                        trajectory.material.opacity = 0.15;
-                    }
-                    hoverObject = null;
-                }
+            else if(intersects.length > 0 && hoverObject.planet !== intersects[0].object) {
+                this.unhighlightPlanet(composer, hoverObject);
+                hoverObject.planet = intersects[0].object;
+                hoverObject.outline = this.highlightPlanet(scene, camera, composer, intersects[0].object);
+            }
+            else if(intersects.length === 0 && hoverObject.planet != null) {
+                this.unhighlightPlanet(composer, hoverObject);
+                hoverObject.planet = null;
+                hoverObject.outline = null;
             }
 
             composer.render();
@@ -172,6 +161,31 @@ export default {
             }
 
             return planets;
+        },
+        // Creates outline around planet and makes trajectory brighter
+        highlightPlanet: function (scene, camera, composer, mesh) {
+            const outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera, [mesh.parent]);
+            outlinePass.edgeStrength = 3;
+            outlinePass.edgeGlow = 0;
+            outlinePass.edgeThickness = 1;
+            outlinePass.visibleEdgeColor.set(0xffffff);
+            outlinePass.hiddenEdgeColor.set(0x000000);
+            composer.addPass(outlinePass);
+
+            const trajectory = mesh.parent.userData.trajectory;
+            if(trajectory) {
+                trajectory.material.opacity = 1;
+            }
+
+            return outlinePass;
+        },
+        // Removes outline from planet and makes trajectory transparent
+        unhighlightPlanet: function (composer, hoverObject) {
+            composer.removePass(composer.passes.find(x => x === hoverObject.outline));
+            const trajectory = hoverObject.planet.parent.userData.trajectory;
+            if(trajectory) {
+                trajectory.material.opacity = 0.15;
+            }
         },
         // Finds the correct object to orbit in the list of planets
         findOrbitObject: function(planets, name) {
