@@ -35,8 +35,6 @@ export default {
 
         const raycaster = new THREE.Raycaster();
 
-        const direction = new THREE.Vector3();
-
         THREE.Object3D.prototype.tick = (e) => {}
 
         let hoverObject = {
@@ -55,16 +53,9 @@ export default {
             for(let planet of planets){
                 planet.tick(delta);
             }
+            // Make cameara follow selected planet
             if(selectedPlanet) {
-                //let planetPosition = new THREE.Vector3();
                 selectedPlanet.children[0].getWorldPosition(controls.target);
-                controls.update();
-                // update the transformation of the camera so it has an offset position to the current target
-                direction.subVectors(camera.position, controls.target);
-                direction.normalize().multiplyScalar(10);
-                camera.position.copy(direction.add(controls.target));
-                
-                //controls.target.set(planetPosition.x, planetPosition.y, planetPosition.z);
             }
             controls.update();
             
@@ -119,7 +110,19 @@ export default {
             // Planet click -> Todo: get object with userData for planet card
             if (hoverObject.planet != null) {
                 const planet = this.findMeshPlanet(hoverObject.planet);
-
+                // Set default distance and target to sun
+                if(planet.name === "sun") { 
+                    controls.minDistance = 60;
+                    controls.maxDistance = 500;
+                    controls.target.set(0, 0, 0);
+                }
+                // Change min/max camera distance to suit given planet
+                else {
+                    let box = new THREE.Box3().setFromObject(planet.children[0].children[0]);
+                    let diameter = Math.abs(box.max.x - box.min.x);
+                    controls.minDistance = diameter * 1.25;
+                    controls.maxDistance = diameter * 2.5;
+                }
                 selectedPlanet = planet;
             }
         });
