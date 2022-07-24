@@ -35,12 +35,16 @@ export default {
 
         const raycaster = new THREE.Raycaster();
 
+        const direction = new THREE.Vector3();
+
         THREE.Object3D.prototype.tick = (e) => {}
 
         let hoverObject = {
             planet: null,
             outline: null,
         };
+
+        let selectedPlanet = null;
         
         renderer.autoClear = false;
         camera.layers.enable(1);
@@ -50,6 +54,17 @@ export default {
             let delta = clock.getDelta();
             for(let planet of planets){
                 planet.tick(delta);
+            }
+            if(selectedPlanet) {
+                //let planetPosition = new THREE.Vector3();
+                selectedPlanet.children[0].getWorldPosition(controls.target);
+                controls.update();
+                // update the transformation of the camera so it has an offset position to the current target
+                direction.subVectors(camera.position, controls.target);
+                direction.normalize().multiplyScalar(10);
+                camera.position.copy(direction.add(controls.target));
+                
+                //controls.target.set(planetPosition.x, planetPosition.y, planetPosition.z);
             }
             controls.update();
             
@@ -88,11 +103,25 @@ export default {
             camera.updateProjectionMatrix();
         }
 
-        document.addEventListener( 'mousemove', (e) => {
+        document.addEventListener("mousemove", (e) => {
 	        e.preventDefault();
 
-            mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-            mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        document.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
+
+            // Planet click -> Todo: get object with userData for planet card
+            if (hoverObject.planet != null) {
+                const planet = this.findMeshPlanet(hoverObject.planet);
+
+                selectedPlanet = planet;
+            }
         });
     },
     methods: {
@@ -104,6 +133,7 @@ export default {
                 let gltf = await loader.loadAsync(`./assets/gltf/${planet.name}.glb`);
                 let updateObject;
                 let userData = {
+                    isPlanet: true,
                     orbitalVelocity: planet.orbitalVelocity,
                     orbitalRadius: planet.orbitalRadius,
                     currentDistance: 2 * Math.PI * planet.orbitalRadius * Math.random(),
@@ -157,8 +187,6 @@ export default {
 
                     updateObject = group;
 
-                    gltf.scene.children[0].material.side = 2;
-
                     scene.add(group);
                     planets.push(group);
                 }
@@ -184,7 +212,7 @@ export default {
                 trajectory.material.opacity = 1;
             }
 
-            return null; //outlinePass;
+            return null;
         },
         // Removes outline from planet and makes trajectory transparent
         unhighlightPlanet: function (mesh) {
@@ -206,6 +234,11 @@ export default {
                 return planet.children.find(p => !p.userData.isPivot);
             }
             return planet;
+        },
+        // Return the planet that contains given mesh
+        findMeshPlanet: function(mesh) {
+            if(mesh.userData.isPlanet) return mesh;
+            return mesh.parent == null ? null : this.findMeshPlanet(mesh.parent);
         },
         // Adds tick method to planet that runs every frame 
         createUpdateLoop: function(planet) {
@@ -274,8 +307,6 @@ export default {
 
             renderer.autoClearColor = false;
             renderer.outputEncoding = THREE.LinearEncoding;
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.render(scene, camera);
 
             return renderer;
@@ -299,11 +330,11 @@ export default {
             return controls;
         },
         setupLighting: function (scene) {
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
             scene.add(ambientLight);
 
             // Light from the Sun
-            const pointLight = new THREE.PointLight(0xffe8e0, 1.35, 300);
+            const pointLight = new THREE.PointLight(0xffe8e0, 1.5, 300);
             scene.add(pointLight);
 
             const textureLoader = new THREE.TextureLoader();
@@ -319,78 +350,36 @@ export default {
             lensflare.addElement( new LensflareElement(textureFlare1, 140));
             pointLight.add(lensflare);
 
-            // Lights used to bright up the sun
-            const dirLight1 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight1.position.z = 12;
-            dirLight1.position.y = 12;
-            dirLight1.lookAt( 0, 0, 0 );
+             // Lights used to bright up the sun
+            const dirLight1 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
+            dirLight1.position.set(-12, 0, 0);
+            dirLight1.lookAt(0, 0, 0)
             scene.add(dirLight1);
 
-            const dirLight2 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight2.position.z = -12;
-            dirLight2.position.y = 12;
-            dirLight2.lookAt( 0, 0, 0 );
+            const dirLight2 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
+            dirLight2.position.set(12, 0, 0);
+            dirLight2.lookAt(0, 0, 0)
             scene.add(dirLight2);
 
-            const dirLight3 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight3.position.x = 12;
-            dirLight3.position.y = 12;
-            dirLight3.lookAt( 0, 0, 0 );
+            const dirLight3 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            dirLight3.position.set(0, 10, 12);
+            dirLight3.lookAt(0, 0, 0)
             scene.add(dirLight3);
 
-            const dirLight4 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight4.position.x = -12;
-            dirLight4.position.y = 12;
-            dirLight4.lookAt( 0, 0, 0 );
+            const dirLight4 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            dirLight4.position.set(0, 10, -12);
+            dirLight4.lookAt(0, 0, 0)
             scene.add(dirLight4);
 
-            const dirLight5 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight5.position.z = 12;
-            dirLight5.position.y = -12;
-            dirLight5.lookAt( 0, 0, 0 );
+            const dirLight5 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            dirLight5.position.set(0, -10, 12);
+            dirLight5.lookAt(0, 0, 0)
             scene.add(dirLight5);
 
-            const dirLight6 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight6.position.z = -12;
-            dirLight6.position.y = -12;
-            dirLight6.lookAt( 0, 0, 0 );
+            const dirLight6 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            dirLight6.position.set(0, -10, -12);
+            dirLight6.lookAt(0, 0, 0)
             scene.add(dirLight6);
-
-            const dirLight7 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight7.position.x = 12;
-            dirLight7.position.y = -12;
-            dirLight7.lookAt( 0, 0, 0 );
-            scene.add(dirLight7);
-
-            const dirLight8 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight8.position.x = -12;
-            dirLight8.position.y = -12;
-            dirLight8.lookAt( 0, 0, 0 );
-            scene.add(dirLight8);
-
-            const dirLight9 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight9.position.z = 12;
-            dirLight9.position.y = 0;
-            dirLight9.lookAt( 0, 0, 0 );
-            scene.add(dirLight9);
-
-            const dirLight10 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight10.position.z = -12;
-            dirLight10.position.y = 0;
-            dirLight10.lookAt( 0, 0, 0 );
-            scene.add(dirLight10);
-
-            const dirLight11 = new THREE.RectAreaLight(0xffffff, 1, 26, 26);
-            dirLight11.position.x = 12;
-            dirLight11.position.y = 0;
-            dirLight11.lookAt( 0, 0, 0 );
-            scene.add(dirLight11);
-
-            const dirLight12 = new THREE.RectAreaLight(0xffffff, 3, 26, 26);
-            dirLight12.position.x = -12;
-            dirLight12.position.y = 0;
-            dirLight12.lookAt( 0, 0, 0 );
-            scene.add(dirLight12);
         },
         // Set's the renderers size to current window size
         resizeRenderer: function (renderer) { 
