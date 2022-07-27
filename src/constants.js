@@ -63,10 +63,10 @@ export const PLANETS = [
         distanceFromSun: 1,
         radius: 6371,
         TimesLarger: -1,
-        orbitalVelocity: 29.8, //29.8
+        orbitalVelocity: 29.8,
         orbitObject: "sun",
         orbitalRadius: 149600000, 
-        scaledOrbitalRadius: 37, //149.6, //149600000 // Scale: 1m : 1 000 000km
+        scaledOrbitalRadius: 37,
         rotationVelocity: 0.46,
         orbitalInclination: 0,
         axialTilt: 23.44,

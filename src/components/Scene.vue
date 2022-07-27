@@ -1,5 +1,6 @@
 <template>
     <canvas ref="canvas"></canvas>
+    <Options @speedChanged="onSpeedChange"/>
 </template>
 
 <script>
@@ -8,13 +9,19 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLANETS } from "../constants";
 import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare.js";
+import Options from "./Options.vue";
 
 const loader = new GLTFLoader();
 
 export default {
     data() {
         return {
+            speed: 1,
+            idealizedSpeed: true,
         }
+    },
+    components: {
+        Options
     },
     async mounted(){
         // Create scene
@@ -102,8 +109,6 @@ export default {
         });
 
         document.addEventListener("click", (e) => {
-            e.preventDefault();
-
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
 
@@ -245,27 +250,31 @@ export default {
         },
         // Adds tick method to planet that runs every frame 
         createUpdateLoop: function(planet) {
-            planet.tick = function(e) {
+            planet.tick = (e) => {
                 // Planet orbit around its parent
-                if(this.userData.orbitalRadius !== 0){
-                    // (this.userData.orbitalVelocity * e * this.userData.orbitalCircumference / 500) // For idealized
-                    this.userData.currentDistance += (this.userData.orbitalVelocity * e) * 60 * 60 * 24;// * 28; 
-                    if(this.userData.currentDistance > this.userData.orbitalCircumference){
-                        this.userData.currentDistance = this.userData.currentDistance % this.userData.orbitalCircumference
+                if(planet.userData.orbitalRadius !== 0){
+                    planet.userData.currentDistance += this.idealizedSpeed
+                    ? Math.max((e * planet.userData.orbitalVelocity * planet.userData.orbitalRadius / 100), 6000)
+                    : (planet.userData.orbitalVelocity * e) * this.speed;
+
+                    if(planet.userData.currentDistance > planet.userData.orbitalCircumference){
+                        planet.userData.currentDistance = planet.userData.currentDistance % planet.userData.orbitalCircumference
                     }
 
-                    this.rotation.y = this.userData.currentDistance / this.userData.orbitalCircumference * Math.PI * 2;
+                    planet.rotation.y = planet.userData.currentDistance / planet.userData.orbitalCircumference * Math.PI * 2;
                 }
 
                 // Planet rotation around its own axis 
-                this.userData.currentRotation += (this.userData.rotationVelocity * e);// * 60 * 60 * 24;// * 28;
-                let rY = this.userData.currentRotation / this.userData.planetCircumference * Math.PI * 2;
+                planet.userData.currentRotation += this.idealizedSpeed 
+                ? (planet.userData.planetCircumference * e * 0.1)
+                : (planet.userData.rotationVelocity * e) * this.speed;
+                let rY = planet.userData.currentRotation / planet.userData.planetCircumference * Math.PI * 2;
                 // Find the Group that holds the Meshes and roatate it
-                if(this.userData.isPivot){
-                    this.children[0].children[0].rotation.y = rY;
+                if(planet.userData.isPivot){
+                    planet.children[0].children[0].rotation.y = rY;
                 }
                 else{
-                    this.children[0].rotation.y = rY;
+                    planet.children[0].rotation.y = rY;
                 }
             };  
         },
@@ -388,6 +397,24 @@ export default {
         resizeRenderer: function (renderer) { 
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
+        },
+        // Event that gets called when speed option changed
+        onSpeedChange(value) {
+            this.idealizedSpeed = false;
+            switch(value) {
+                case "realtime":
+                    this.speed = 1;
+                    break;
+                case "day_sec": 
+                    this.speed = 86400;
+                    break;
+                case "mon_sec":
+                    this.speed = 2419200;
+                    break;
+                case "idealized":
+                    this.idealizedSpeed = true;
+                    break;
+            }
         }
     }
 }

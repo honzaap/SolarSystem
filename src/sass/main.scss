@@ -1,5 +1,8 @@
 :root{
-
+    --primary: #191C44;
+    --secondary: #1A1D79;
+    --tertiary: #0587cc;
+    --text: #F3F3F3;
 }
 
 *{
@@ -13,4 +16,16 @@ body{
     min-height: 100vh;
     min-width: 100vw;
     background: #000;
+    color: var(--text);
+    font-family: 'Chivo', sans-serif;
+}
+
+h1, h2 {
+    font-family: 'Bai Jamjuree', sans-serif;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
 }
