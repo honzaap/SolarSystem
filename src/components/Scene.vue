@@ -366,42 +366,63 @@ export default {
 
             const lensflare = new Lensflare();
             lensflare.layers.enable(1);
-            lensflare.addElement( new LensflareElement(textureFlare0, 120));
+            lensflare.addElement( new LensflareElement(textureFlare0, 130));
             lensflare.addElement( new LensflareElement(textureFlare1, 100));
-            lensflare.addElement( new LensflareElement(textureFlare1, 130));
             lensflare.addElement( new LensflareElement(textureFlare1, 140));
+            lensflare.addElement( new LensflareElement(textureFlare1, 180));
             pointLight.add(lensflare);
 
-             // Lights used to bright up the sun
-            const dirLight1 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
-            dirLight1.position.set(-12, 0, 0);
-            dirLight1.lookAt(0, 0, 0)
+            // Lights used to bright up the sun
+            const rectLight1 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
+            rectLight1.position.set(-12, 0, 0);
+            rectLight1.lookAt(0, 0, 0)
+            scene.add(rectLight1);
+
+            const rectLight2 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
+            rectLight2.position.set(12, 0, 0);
+            rectLight2.lookAt(0, 0, 0)
+            scene.add(rectLight2);
+
+            const rectLight3 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            rectLight3.position.set(0, 10, 12);
+            rectLight3.lookAt(0, 0, 0)
+            scene.add(rectLight3);
+
+            const rectLight4 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            rectLight4.position.set(0, 10, -12);
+            rectLight4.lookAt(0, 0, 0)
+            scene.add(rectLight4);
+
+            const rectLight5 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            rectLight5.position.set(0, -10, 12);
+            rectLight5.lookAt(0, 0, 0)
+            scene.add(rectLight5);
+
+            const rectLight6 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
+            rectLight6.position.set(0, -10, -12);
+            rectLight6.lookAt(0, 0, 0)
+            scene.add(rectLight6);
+
+            // Directional lights used to get better shading
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.1);
+            dirLight1.position.set(-250, 15, 0);
+            dirLight1.lookAt(0, 0, 0);
             scene.add(dirLight1);
-
-            const dirLight2 = new THREE.RectAreaLight(0xffffff, 7, 20, 25);
-            dirLight2.position.set(12, 0, 0);
-            dirLight2.lookAt(0, 0, 0)
+            
+            const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.1);
+            dirLight2.position.set(250, 15, 0);
+            dirLight2.lookAt(0, 0, 0);
             scene.add(dirLight2);
-
-            const dirLight3 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
-            dirLight3.position.set(0, 10, 12);
-            dirLight3.lookAt(0, 0, 0)
+            
+            const dirLight3 = new THREE.DirectionalLight(0xffffff, 0.1);
+            dirLight3.position.set(0, 15, -250);
+            dirLight3.lookAt(0, 0, 0);
             scene.add(dirLight3);
-
-            const dirLight4 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
-            dirLight4.position.set(0, 10, -12);
-            dirLight4.lookAt(0, 0, 0)
+            
+            const dirLight4 = new THREE.DirectionalLight(0xffffff, 0.1);
+            dirLight4.position.set(0, 15, 250);
+            dirLight4.lookAt(0, 0, 0);
             scene.add(dirLight4);
-
-            const dirLight5 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
-            dirLight5.position.set(0, -10, 12);
-            dirLight5.lookAt(0, 0, 0)
-            scene.add(dirLight5);
-
-            const dirLight6 = new THREE.RectAreaLight(0xffffff, 7, 20, 20);
-            dirLight6.position.set(0, -10, -12);
-            dirLight6.lookAt(0, 0, 0)
-            scene.add(dirLight6);
         },
         // Set's the renderers size to current window size
         resizeRenderer: function (renderer) { 
