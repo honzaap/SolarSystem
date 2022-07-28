@@ -8,7 +8,7 @@
                     <label for="realtime">Realtime</label>
                 </div>
                 <div class="select-item">
-                    <input name="speed" id="day_sec" type="radio" value="day_sec" v-model="speed" @change="onSpeedChange">
+                    <input checked name="speed" id="day_sec" type="radio" value="day_sec" v-model="speed" @change="onSpeedChange">
                     <label for="day_sec">1 day/sec</label>
                 </div>
                 <div class="select-item">
@@ -16,7 +16,7 @@
                     <label for="mon_sec">1 mon/sec</label>
                 </div>
                 <div class="select-item">
-                    <input checked name="speed" id="idealized" type="radio" value="idealized" v-model="speed" @change="onSpeedChange">
+                    <input name="speed" id="idealized" type="radio" value="idealized" v-model="speed" @change="onSpeedChange">
                     <label for="idealized">Idealized</label>
                 </div>
             </div>
@@ -28,7 +28,7 @@
 export default {
     data() {
         return {
-            speed: "realtime"
+            speed: "day_sec"
         }
     },
     methods: {
@@ -36,6 +36,9 @@ export default {
             const value = e.target.value;
             this.$emit('speedChanged', value);
         }
+    },
+    mounted() {
+        this.$emit('speedChanged', this.speed);
     }
 }
 </script>
@@ -54,7 +57,7 @@ export default {
         }
         .input-select {
             background-color: var(--primary);
-            border-radius: 20px;
+            border-radius: var(--radius);
             margin-top: 10px;
             max-width: 115px;
             margin-left: auto;
@@ -71,7 +74,7 @@ export default {
                     }
                 }
                 label {
-                    padding: 10px 12px;
+                    padding: 10px 16px;
                     cursor: pointer;
                     flex-grow: 1;
                 }

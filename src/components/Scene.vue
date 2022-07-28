@@ -1,6 +1,10 @@
 <template>
     <canvas ref="canvas"></canvas>
     <Options @speedChanged="onSpeedChange"/>
+    <div class="date-display" :class="{disabled: idealizedSpeed}">
+        <img class="ico" src="../../public/date.svg" alt="Date">
+        <p>{{ date }}</p>
+    </div>
 </template>
 
 <script>
@@ -18,12 +22,15 @@ export default {
         return {
             speed: 1,
             idealizedSpeed: true,
+            time: 0,
         }
     },
     components: {
-        Options
+        Options,
     },
     async mounted(){
+        this.time = Date.now();
+
         // Create scene
         const scene = this.createScene();
         const bacakgroundScene = this.createBackgroundScene();
@@ -83,6 +90,9 @@ export default {
                 hoverObject.planet = null;
                 hoverObject.outline = null;
             }
+
+            // Update time
+            if(!this.idealizedSpeed) this.time += this.speed * 1000 * delta;
 
             renderer.clear();
             camera.layers.set(1);
@@ -416,13 +426,32 @@ export default {
                     break;
             }
         }
-    }
+    },
+    computed: {
+        date() {
+            const date = new Date(this.time);
+            const result = `${("0" + date.getDate()).slice(-2)}. ${("0" + (date.getMonth() + 1).toString()).slice(-2)}. ${date.getFullYear()}`;
+
+            return result;
+        }
+    },
 }
 </script>
 
-<style>
+<style scoped lang="scss">
 canvas{
     width: 100vw;
     height: 100vh;
+}
+.date-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1em;
+    display: flex;
+    gap: 8px;
+    &.disabled{
+        opacity: 0.2;
+    }
 }
 </style>
