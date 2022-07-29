@@ -19,10 +19,22 @@ body{
     background: #000;
     color: var(--text);
     font-family: 'Chivo', sans-serif;
+    position: relative;
 }
 
 h1, h2 {
     font-family: 'Bai Jamjuree', sans-serif;
+}
+
+h1 {
+    position: absolute;
+    pointer-events: none;
+    display: block;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    font-size: 20px;
 }
 
 #app {
