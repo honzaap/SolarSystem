@@ -13,15 +13,11 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { PLANETS } from "../constants";
 import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare.js";
 import Options from "./Options.vue";
 
 const loader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath( '../node_modules/three/examples/js/libs/draco/' );
-loader.setDRACOLoader( dracoLoader );
 
 export default {
     data() {
