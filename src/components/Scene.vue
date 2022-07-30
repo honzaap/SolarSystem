@@ -1,6 +1,7 @@
 <template>
     <canvas ref="canvas"></canvas>
     <Options @speedChanged="onSpeedChange"/>
+    <PlanetCard />
     <div class="date-display" :class="{disabled: idealizedSpeed}">
         <div class="ico">
             <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M0 464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V192H0v272zm320-196c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zM192 268c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zM64 268c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H76c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H76c-6.6 0-12-5.4-12-12v-40zM400 64h-48V16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v48H160V16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v48H48C21.5 64 0 85.5 0 112v48h448v-48c0-26.5-21.5-48-48-48z" fill="#ffffff" class="fill-000000"></path></svg>
@@ -16,6 +17,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLANETS } from "../constants";
 import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare.js";
 import Options from "./Options.vue";
+import PlanetCard from "./PlanetCard.vue";
 
 const loader = new GLTFLoader();
 
@@ -30,6 +32,7 @@ export default {
     emits: ["onSceneLoad"],
     components: {
         Options,
+        PlanetCard,
     },
     async mounted(){
         this.time = Date.now();
@@ -116,14 +119,14 @@ export default {
             camera.updateProjectionMatrix();
         }
 
-        document.addEventListener("mousemove", (e) => {
+        this.$refs.canvas.addEventListener("mousemove", (e) => {
 	        e.preventDefault();
 
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
         });
 
-        document.addEventListener("mousedown", (e) => {
+        this.$refs.canvas.addEventListener("mousedown", (e) => {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
 
@@ -133,7 +136,7 @@ export default {
             }
         });
 
-        document.addEventListener("mouseup", (e) => {
+        this.$refs.canvas.addEventListener("mouseup", (e) => {
             if(!clickedPlanet) return;
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
@@ -389,10 +392,8 @@ export default {
 
             const lensflare = new Lensflare();
             lensflare.layers.enable(1);
-            lensflare.addElement( new LensflareElement(textureFlare0, 130));
-            lensflare.addElement( new LensflareElement(textureFlare1, 100));
-            lensflare.addElement( new LensflareElement(textureFlare1, 140));
-            lensflare.addElement( new LensflareElement(textureFlare1, 180));
+            lensflare.addElement( new LensflareElement(textureFlare0, 100));
+            lensflare.addElement( new LensflareElement(textureFlare1, 40));
             pointLight.add(lensflare);
 
             // Lights used to bright up the sun
@@ -483,19 +484,24 @@ export default {
 </script>
 
 <style scoped lang="scss">
-canvas{
-    width: 100vw;
-    height: 100vh;
-}
-.date-display {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 1em;
-    display: flex;
-    gap: 8px;
-    &.disabled{
-        opacity: 0.2;
+    canvas{
+        width: 100vw;
+        height: 100vh;
     }
-}
+    .date-display {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 1em;
+        display: flex;
+        gap: 8px;
+        &.disabled{
+            opacity: 0.2;
+        }
+    }
+    @media (max-width: 560px) {
+        .date-display {
+            top: 16px;
+        }
+    }
 </style>

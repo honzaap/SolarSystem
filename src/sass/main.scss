@@ -48,3 +48,9 @@ h1 {
     width: 1em;
     height: 1em;
 }
+
+@media (max-width: 560px) {
+    h1 {
+        top: 2px;
+    }
+}
