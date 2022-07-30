@@ -27,6 +27,7 @@ export default {
             time: 0,
         }
     },
+    emits: ["onSceneLoad"],
     components: {
         Options,
     },
@@ -161,6 +162,8 @@ export default {
                 clickedPlanet = null;
             }
         });
+
+        this.$emit('onSceneLoad');
     },
     methods: {
         // Look through list of all planets and initialize them

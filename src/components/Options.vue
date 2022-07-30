@@ -31,6 +31,7 @@ export default {
             speed: "day_sec"
         }
     },
+    emits: ["speedChanged"],
     methods: {
         onSpeedChange(e) {
             const value = e.target.value;
