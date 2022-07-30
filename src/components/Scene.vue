@@ -59,6 +59,8 @@ export default {
         };
 
         let selectedPlanet = null;
+
+        let clickedPlanet = null;
         
         renderer.autoClear = false;
         camera.layers.enable(1);
@@ -120,13 +122,28 @@ export default {
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
         });
 
-        document.addEventListener("click", (e) => {
+        document.addEventListener("mousedown", (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
+
+            if (hoverObject.planet != null) {
+                const planet = this.findMeshPlanet(hoverObject.planet);
+                if(planet) clickedPlanet = planet.name;
+            }
+        });
+
+        document.addEventListener("mouseup", (e) => {
+            if(!clickedPlanet) return;
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
 
             // Planet click -> Todo: get object with userData for planet card
             if (hoverObject.planet != null) {
                 const planet = this.findMeshPlanet(hoverObject.planet);
+                if(planet.name !== clickedPlanet) {
+                    clickedPlanet = null; 
+                    return;
+                }
                 // Set default distance and target to sun
                 if(planet.name === "sun") { 
                     controls.minDistance = 60;
@@ -141,6 +158,7 @@ export default {
                     controls.maxDistance = diameter * 2.5;
                 }
                 selectedPlanet = planet;
+                clickedPlanet = null;
             }
         });
     },
