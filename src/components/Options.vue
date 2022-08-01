@@ -99,4 +99,9 @@ export default {
             }
         }
     }
+    @media (max-height: 360px) {
+        .options {
+            top: 50px;
+        }
+    }
 </style>

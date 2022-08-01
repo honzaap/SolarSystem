@@ -1,7 +1,7 @@
 <template>
     <canvas ref="canvas"></canvas>
     <Options @speedChanged="onSpeedChange"/>
-    <PlanetCard />
+    <PlanetCard v-if="selectedPlanetCard != null" :planetInfo="selectedPlanetCard"  @closeCard="selectedPlanetCard = null"/>
     <div class="date-display" :class="{disabled: idealizedSpeed}">
         <div class="ico">
             <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M0 464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V192H0v272zm320-196c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zM192 268c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40zM64 268c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H76c-6.6 0-12-5.4-12-12v-40zm0 128c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H76c-6.6 0-12-5.4-12-12v-40zM400 64h-48V16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v48H160V16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v48H48C21.5 64 0 85.5 0 112v48h448v-48c0-26.5-21.5-48-48-48z" fill="#ffffff" class="fill-000000"></path></svg>
@@ -27,6 +27,7 @@ export default {
             speed: 1,
             idealizedSpeed: true,
             time: 0,
+            selectedPlanetCard: null,
         }
     },
     emits: ["onSceneLoad"],
@@ -141,7 +142,6 @@ export default {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
 
-            // Planet click -> Todo: get object with userData for planet card
             if (hoverObject.planet != null) {
                 const planet = this.findMeshPlanet(hoverObject.planet);
                 if(planet.name !== clickedPlanet) {
@@ -161,6 +161,7 @@ export default {
                     controls.minDistance = diameter * 1.25;
                     controls.maxDistance = diameter * 2.5;
                 }
+                this.selectedPlanetCard = planet.userData;
                 selectedPlanet = planet;
                 clickedPlanet = null;
             }
@@ -176,19 +177,7 @@ export default {
                 // Load 3D model
                 let gltf = await loader.loadAsync(`./assets/gltf/${planet.name}.glb`);
                 let updateObject;
-                let userData = {
-                    isPlanet: true,
-                    orbitalVelocity: planet.orbitalVelocity,
-                    orbitalRadius: planet.orbitalRadius,
-                    currentDistance: 2 * Math.PI * planet.orbitalRadius * Math.random(),
-                    currentRotation: 0,
-                    planetCircumference: 2 * Math.PI * planet.radius,
-                    orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
-                    scaledOrbitalRadius: planet.scaledOrbitalRadius,
-                    isPivot: false,
-                    radius: planet.radius,
-                    rotationVelocity: planet.rotationVelocity,
-                }
+                let userData = this.getUserDataFor(planet);
                 // Get the object the planet is orbitting
                 if(planet.orbitObject != null) {
                     let orbitObject = this.findOrbitObject(planets, planet.orbitObject);
@@ -470,7 +459,36 @@ export default {
                     this.idealizedSpeed = true;
                     break;
             }
-        }
+        },
+        getUserDataFor(planet) {
+            return {
+                name: planet.name,
+                displayName: planet.displayName,
+                caption: planet.caption,
+                description: planet.description,
+                year: planet.year,
+                day: planet.day,
+                distanceFromSun: planet.distanceFromSun,
+                distance: planet.distance,
+                moons: planet.moons,
+                meanTemp: planet.meanTemp,
+                minTemp: planet.minTemp,
+                maxTemp: planet.maxTemp,
+                timesLarger: planet.timesLarger,
+                orbitObject: planet.orbitObject,
+                isPlanet: true,
+                orbitalVelocity: planet.orbitalVelocity,
+                orbitalRadius: planet.orbitalRadius,
+                currentDistance: 2 * Math.PI * planet.orbitalRadius * Math.random(),
+                currentRotation: 0,
+                planetCircumference: 2 * Math.PI * planet.radius,
+                orbitalCircumference: 2 * Math.PI * planet.orbitalRadius,
+                scaledOrbitalRadius: planet.scaledOrbitalRadius,
+                isPivot: false,
+                radius: planet.radius,
+                rotationVelocity: planet.rotationVelocity,
+            };
+        },
     },
     computed: {
         date() {
