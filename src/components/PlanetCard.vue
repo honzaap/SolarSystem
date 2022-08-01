@@ -27,6 +27,7 @@
         </div>
         <div class="info">
             <h5>{{ planetInfo.caption }}</h5>
+            <p class="description">{{ planetInfo.description }}</p>
             <ul>
                 <li>Radius: <span class="value">{{ planetInfo.radius }} km</span></li>
                 <li v-if="planetInfo.timesLarger && planetInfo.timesLarger !== -1">
@@ -39,7 +40,6 @@
                 <li v-if="planetInfo.day">1 day: <span class="value">{{ planetInfo.day }}</span></li>
                 <li v-if="planetInfo.moons != null">Moons: <span class="value">{{ planetInfo.moons }}</span></li>
             </ul>
-            <p>{{ planetInfo.description }}</p>
         </div>
     </div>
 </template>
@@ -85,22 +85,23 @@ export default {
         top: 50%;
         transform: translateY(-50%);
         width: 280px;
-        height: 410px;
         border-radius: var(--radius);
         box-shadow: -8px -9px 14px rgb(255 255 255 / 8%);
         overflow: hidden;
+        font-size: 14px;
         .planet-img{
             width: 100%;
-            height: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: -1;
             background-color: var(--secondary);
         }
         .info {
-            position: absolute;
-            top: 150px;
-            bottom: 0;
-            left: 0;
+            margin-top: 150px;
+            min-height: 250px;
             width: 100%;
-            height: 100%;
             border-radius: var(--radius);
             background: linear-gradient(131.76deg, var(--primary) -34.78%, var(--dark) 93.37%);
             padding: 6px 12px;
@@ -111,9 +112,8 @@ export default {
                 font-weight: 100;
             }
             ul {
-                margin-top: 10px;
+                margin: 10px 0;
                 text-align: left;
-                font-size: 15px;
                 list-style: none;
                 padding-left: 0;
                 li {
@@ -162,6 +162,9 @@ export default {
             color: #fff;
             font-size: 24px;
             cursor: pointer;
+        }
+        .description {
+            margin: 6px 0;
         }
     }
     @media (max-width: 560px) {
