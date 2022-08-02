@@ -4,8 +4,9 @@
 <h5 align="center">🌎​ Interactive Solar System 3D replica 🪐</h5>
 
 <p align="center">
-  <img alt="SolarSystem Repo stars" src="https://img.shields.io/github/stars/honzaap/SolarSystem?style=flat-square">
-  <img alt="SolarSystem License" src="https://img.shields.io/github/license/honzaap/SolarSystem?style=flat-square">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/honzaap/SolarSystem?label=stars&style=flat-square">
+  <img alt="GitHub" src="https://img.shields.io/github/license/honzaap/SolarSystem?label=license&style=flat-square">
+</p>
 
 ### 
 
@@ -13,15 +14,16 @@
 
 ### 
 
-![Gif of Solar System](./readme_gif.gif)
-
+<p align="center">
+<img alt="Solar system gif" src="./readme_gif.gif" />
+</p>
 <p align="center">Made with <a href="https://github.com/mrdoob/three.js">ThreeJS</a> and <a href="https://github.com/vuejs/core">Vue</a></p>
 
 
 ### How does it work? 
 - Move around the Solar system with mouse
 - Click on planet or moon to find out more about it 
-- Change the speed  with right side menu
+- Change the speed  with side menu
 
 ### How to install
 - Clone repository to your local machine
